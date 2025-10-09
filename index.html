@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Rincard Prestitot — Cartes Prépayées</title>
+<style>
+  :root{
+    --brand:#8a2be2;
+    --brand-dark:#5d1a99;
+    --muted:#cfc3e9;
+    --bg1: linear-gradient(135deg,#efe8ff,#dcc9ff);
+    --card-bg: #ffffff;
+    --card-contrast: rgba(13,10,32,0.04);
+    --glass: rgba(255,255,255,0.85);
+    --danger: #b91c1c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:var(--bg1);
+    color:#0b0b12;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.4;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px;
+    background:linear-gradient(90deg,var(--brand),var(--brand-dark));
+    color:#fff;
+    position:sticky; top:0; z-index:50;
+    box-shadow:0 4px 18px rgba(13,10,32,0.12);
+  }
+  header h1{ margin:0; font-size:18px; letter-spacing:0.2px; font-weight:700; }
+  .nav-actions{ display:flex; gap:8px; align-items:center; }
+  .btn-ghost{
+    background:transparent; border:1px solid rgba(255,255,255,0.18);
+    color:#fff; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600;
+  }
+  main{ max-width:1100px; margin:22px auto; padding:0 16px; }
+
+  .page{ display:none; padding-bottom:20px; }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+    gap:18px;
+    margin-bottom:20px;
+  }
+  .card{
+    background: linear-gradient(180deg, var(--card-bg), #fbfbff);
+    border-radius:14px;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+    min-height:220px;
+    box-shadow: 0 6px 18px var(--card-contrast);
+    border:1px solid rgba(13,10,32,0.04);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .card:hover{ transform:translateY(-6px); box-shadow:0 16px 40px rgba(13,10,32,0.12); }
+  .card-top{ padding:14px 16px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .chip{ width:56px; height:36px; border-radius:8px; background:linear-gradient(180deg,#ffd66b,#ffb84d); display:flex; align-items:center; justify-content:center; font-weight:800; color:#3b2a00; font-size:12px; box-shadow: inset 0 -3px 8px rgba(0,0,0,0.06); }
+  .card-visual{ height:110px; display:flex; align-items:center; justify-content:center; background-size:cover; background-position:center; }
+  .card-body{ padding:12px 16px 16px 16px; display:flex; flex-direction:column; gap:8px; margin-top:auto; }
+  .card-title{ font-size:16px; color:var(--brand-dark); font-weight:700; margin:0; }
+  .card-sub{ font-size:13px; color:var(--muted); margin:0; }
+  .price{ font-size:18px; font-weight:800; color:#0b1220; }
+
+  .choose{
+    margin-top:8px; padding:10px; border-radius:10px; border:none;
+    background:var(--brand); color:white; font-weight:800; cursor:pointer;
+  }
+  .choose:hover{ background:var(--brand-dark) }
+
+  .page-header{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin:14px 0; }
+  .search{ padding:10px 12px; border-radius:10px; border:1px solid rgba(11,17,30,0.06); width:100%; max-width:360px; }
+
+  .card-form{
+    background:var(--card-bg); border-radius:12px; padding:18px; box-shadow:0 10px 30px rgba(13,10,32,0.06);
+    max-width:720px; margin:0 auto;
+  }
+  label{ display:block; font-weight:700; margin-top:10px; color:#0b1220; font-size:13px; }
+  input, select, textarea{ width:100%; padding:10px 12px; margin-top:8px; border-radius:8px; border:1px solid #e6e9ef; font-size:14px; }
+  textarea{ min-height:120px; resize:vertical; }
+  .send{ margin-top:14px; width:100%; padding:12px; border-radius:10px; background:linear-gradient(90deg,var(--brand),var(--brand-dark)); color:#fff; border:none; font-weight:800; cursor:pointer; }
+  .send:active{ transform:translateY(1px) }
+
+  .address-box{
+    background:#f7f3ff; border:1px dashed rgba(93,26,153,0.12); padding:10px; border-radius:8px; margin-top:8px; font-weight:700; color:var(--brand-dark);
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+  }
+  .address-copy{ background:var(--brand); color:#fff; padding:6px 8px; border-radius:8px; cursor:pointer; font-weight:700; border:none; }
+  .warning{ color:var(--danger); font-weight:700; font-size:13px; margin-top:6px; }
+
+  footer{ margin-top:28px; padding:18px; text-align:center; font-size:13px; color:#4b4b57; border-top:1px solid rgba(11,17,30,0.04); background:transparent; }
+  footer a{ color:var(--brand-dark); text-decoration:none; font-weight:700; }
+
+  @media (max-width:600px){
+    .page-header{ flex-direction:column; align-items:stretch; gap:10px; }
+    .grid{ grid-template-columns:repeat(1,1fr) }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Rincard Prestitot</h1>
+  <div class="nav-actions">
+    <button class="btn-ghost" data-nav="home">Accueil</button>
+    <button class="btn-ghost" data-nav="others">Steam & Apple</button>
+    <button id="menuToggle" class="btn-ghost">Paiement</button>
+  </div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section id="page-home" class="page">
+    <div class="page-header">
+      <h2>Cartes prépayées</h2>
+      <input id="searchHome" class="search" placeholder="Rechercher une carte (ex: Visa, Mastercard)" />
+    </div>
+    <div id="gridHome" class="grid" aria-live="polite"></div>
+  </section>
+
+  <!-- OTHERS -->
+  <section id="page-others" class="page">
+    <div class="page-header">
+      <h2>Cartes Steam & Apple</h2>
+      <input id="searchOthers" class="search" placeholder="Rechercher Steam / Apple..." />
+    </div>
+    <div id="gridOthers" class="grid" aria-live="polite"></div>
+  </section>
+
+  <!-- PAYMENT -->
+  <section id="page-pay" class="page">
+    <div style="max-width:900px;margin:0 auto;">
+      <h2>Page de paiement</h2>
+      <p style="color:var(--muted); margin-top:6px;">Confirmez votre paiement manuellement. Le bouton <strong>Envoyer preuve</strong> ouvrira votre messagerie pour envoyer la preuve à <strong>prestatot@outlook.fr</strong>.</p>
+
+      <div class="card-form" role="form" aria-labelledby="payFormTitle">
+        <label for="productField">Produit</label>
+        <input id="productField" readonly />
+
+        <label for="methodField">Mode de paiement</label>
+        <select id="methodField" aria-controls="cryptoBlock">
+          <option value="Transcash">Transcash (paiement physique en point de vente)</option>
+          <option value="Crypto">Crypto (envoyer via wallet)</option>
+        </select>
+
+        <div id="cryptoBlock" style="display:none;">
+          <label for="cryptoSelect">Choisir la crypto</label>
+          <select id="cryptoSelect">
+            <option value="BTC">BTC</option>
+            <option value="ETH">ETH</option>
+            <option value="BNB">BNB</option>
+            <option value="SOL">SOL</option>
+            <option value="TRX">TRX</option>
+          </select>
+
+          <div class="address-box" id="addressBox" style="display:none;">
+            <div id="addressText" style="word-break:break-all"></div>
+            <button class="address-copy" id="copyAddressBtn">Copier</button>
+          </div>
+
+          <div id="cryptoWarning" class="warning" style="display:none;"></div>
+        </div>
+
+        <label for="emailField">Email (où recevoir la carte)</label>
+        <input id="emailField" type="email" placeholder="ex: toi@mail.com" />
+
+        <label for="amountField">Montant payé (€)</label>
+        <input id="amountField" inputmode="decimal" placeholder="ex: 250" />
+
+        <label for="infoField">Infos (ticket / TX hash / point de vente)</label>
+        <textarea id="infoField" placeholder="Ticket n°, point de vente, TX hash..."></textarea>
+
+        <button class="send" id="sendProofBtn">Envoyer preuve</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2025 Rincard Prestitot.</p>
+  <p style="max-width:900px; margin:6px auto 0;">
+    <strong>Conditions d'utilisation :</strong> En utilisant ce site vous acceptez que toutes les transactions soient traitées manuellement. Rincard Prestitot n'est pas un établissement bancaire et n'exécute aucune opération de paiement automatisée. Les informations fournies serviront uniquement au traitement des commandes.
+  </p>
+  <p style="max-width:900px; margin:6px auto 0;">
+    <strong>Politique de confidentialité :</strong> Nous respectons votre vie privée. Aucune donnée sensible (numéro de carte bancaire, mots de passe) n'est collectée ou stockée ici. Les preuves de paiement envoyées par mail sont utilisées uniquement pour valider et traiter votre commande.
+  </p>
+  <p style="max-width:900px; margin:6px auto 6px;">
+    <strong>Contact :</strong> Pour toute question : <a href="mailto:prestatot@outlook.fr">prestatot@outlook.fr</a>
+  </p>
+</footer>
+
+<script>
+/* ================= DATA ================= */
+const products = [
+  { id:'c1', title:'Classic Visa – 250€', type:'prepaid', price:250, desc:'Plafond 2.000€, Retrait 500€/j, Validité 45 jours' },
+  { id:'c2', title:'Mastercard 500€', type:'prepaid', price:500, desc:'Plafond 11.000€, Retrait 500€/j, Validité 60 jours' },
+  { id:'c3', title:'Gold Mastercard 700€', type:'prepaid', price:700, desc:'Plafond 20.000€, Retrait 1.000€/j, Validité 60 jours' },
+  { id:'c4', title:'Infinity Visa 1000€', type:'prepaid', price:1000, desc:'Plafond 45.000€, Retrait 1.000€/j, Validité 90 jours' },
+  { id:'s1', title:'Carte Steam 20€', type:'steam', price:20, desc:'Code Steam Wallet 20€' },
+  { id:'s2', title:'Carte Steam 50€', type:'steam', price:50, desc:'Code Steam Wallet 50€' },
+  { id:'a1', title:'Carte Apple 15€', type:'apple', price:15, desc:'Code Apple 15€' },
+  { id:'a2', title:'Carte Apple 50€', type:'apple', price:50, desc:'Code Apple 50€' }
+];
+
+const cryptoAddresses = {
+  BTC: 'bc1qsyn0jp2nzmp2kx65kscnttmhvruq5v2hl0jwra',
+  ETH: '0xd4Fbc12bA94496eB13D968e575C9f03380bE4F48',
+  BNB: '0xd4Fbc12bA94496eB13D968e575C9f03380bE4F48',
+  SOL: '3FVzZ3W2HZ7PaHN9EoWMeA5Pm4A94GyG7R6QWpYiUGRb',
+  TRX: 'TKHvwB5vDXAUJwYDZ8SJeYifZZX33fP6PA'
+};
+
+const cryptoNotes = {
+  BTC: '⚠️ Envoyer uniquement en BTC (réseau Bitcoin). Tout envoi sur un autre réseau sera irrécupérable.',
+  ETH: '⚠️ Envoyer uniquement en ETH (réseau Ethereum). Tout envoi sur un autre réseau sera irrécupérable.',
+  BNB: '⚠️ Envoyer uniquement en BNB. Vérifiez le réseau (BEP20/BSC) si applicable.',
+  SOL: '⚠️ Envoyer uniquement en SOL (réseau Solana). Tout envoi sur un autre réseau sera irrécupérable.',
+  TRX: '⚠️ Envoyer uniquement en TRX (réseau TRC20). Tout envoi sur un autre réseau sera irrécupérable.'
+};
+
+/* ============== Nouveau : logo inventé (SVG inline) ============== */
+/* Fonction qui retourne le HTML SVG du logo inventé, décliné par type */
+function getInventedLogoHTML(p){
+  // couleurs par type
+  const palette = {
+    prepaid: { bg1: '#f0f7ff', bg2: '#e6f0ff', mark: '#2b6cff', accent: '#8a2be2' },
+    steam:  { bg1: '#f0fbff', bg2: '#e8f7ff', mark: '#0b1b2b', accent: '#08a0ff' },
+    apple:  { bg1: '#fff6fb', bg2: '#fff0f5', mark: '#111827', accent: '#ff6fa3' },
+    default:{ bg1: '#fff', bg2: '#f4f0ff', mark: '#6b21a8', accent: '#e879f9' }
+  };
+  const typeKey = p.type || 'default';
+  const c = palette[typeKey] || palette.default;
+
+  /* Le logo : un monogramme "RP" stylisé avec une petite étincelle.
+     - SVG responsive, accessible (aria-label)
+     - intégré dans un fond arrondi pour ressembler à un badge */
+  return `
+    <div class="card-visual" aria-hidden="false" style="background:linear-gradient(135deg,${c.bg1},${c.bg2});">
+      <svg width="160" height="90" viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Logo Rincard Prestitot">
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="${c.mark}"/>
+            <stop offset="1" stop-color="${c.accent}"/>
+          </linearGradient>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.12"/>
+          </filter>
+        </defs>
+
+        <!-- badge rect -->
+        <rect x="10" y="10" rx="12" width="140" height="70" fill="url(#g1)" opacity="0.12"></rect>
+
+        <!-- monogram "R" -->
+        <g transform="translate(30,22)" filter="url(#shadow)">
+          <path d="M6 44 L6 6 C6 5 7 4 9 4 L26 4 C34 4 38 11 38 20 C38 29 34 34 26 34 L20 34" fill="none" stroke="url(#g1)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+
+        <!-- monogram "P" (superposé) -->
+        <g transform="translate(62,20)">
+          <path d="M4 44 L4 6 L18 6 C26 6 30 12 30 19 C30 26 26 32 18 32 L6 32" fill="none" stroke="url(#g1)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+
+        <!-- petite étincelle -->
+        <g transform="translate(120,20)" fill="${c.accent}" opacity="0.95">
+          <polygon points="6,0 8,6 14,8 8,10 6,16 4,10 -2,8 4,6" transform="scale(0.9)"/>
+        </g>
+
+        <!-- texte discret -->
+        <text x="26" y="74" font-family="Inter, Arial, Helvetica, sans-serif" font-size="10" fill="#2b2b33" opacity="0.9">Rincard Prestitot</text>
+      </svg>
+    </div>
+  `;
+}
+
+/* ============== renderGrid (utilise le nouveau logo) ============== */
+function renderGrid(selector, filterFn){
+  const container = document.getElementById(selector);
+  container.innerHTML = '';
+  const list = products.filter(filterFn);
+  list.forEach(p=>{
+    const div = document.createElement('article');
+    div.className = 'card';
+    // choix du badge chip (conserve l'ancien comportement)
+    const chipLabel = p.title.includes('Visa')? 'VISA' : p.title.includes('Mastercard')?'MC': p.type.toUpperCase();
+    div.innerHTML = `
+      <div class="card-top"><div class="chip">${chipLabel}</div></div>
+      ${ getInventedLogoHTML(p) }
+      <div class="card-body">
+        <h3 class="card-title">${p.title}</h3>
+        <p class="card-sub">${p.desc || ''}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="price">${p.price}€</div>
+          <button class="choose" data-product="${p.title}">Choisir</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+  // handlers
+  container.querySelectorAll('.choose').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const prod = e.currentTarget.dataset.product;
+      goToPayment(prod);
+    });
+  });
+}
+
+/* ============== routing & render ============== */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+  const map = { home:'page-home', others:'page-others', pay:'page-pay' };
+  const el = document.getElementById(map[id] || 'page-home');
+  if(el) el.style.display = 'block';
+  window.location.hash = id;
+}
+function initRouting(){
+  const hash = (location.hash || '#home').replace('#','');
+  showPage(hash);
+}
+document.querySelectorAll('[data-nav]').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    const nav = e.currentTarget.dataset.nav;
+    if(nav==='home') showPage('home');
+    if(nav==='others') showPage('others');
+  });
+});
+document.querySelectorAll('.btn-ghost[data-nav]').forEach(b=>{ /* safe if present */ });
+
+document.querySelectorAll('.btn-ghost').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    const nav = e.currentTarget.getAttribute('data-nav');
+    if(nav) showPage(nav);
+  });
+});
+document.getElementById('menuToggle').addEventListener('click', ()=> showPage('pay'));
+
+/* ============== render lists & search ============== */
+function renderAll(){
+  renderGrid('gridHome', p => p.type === 'prepaid');
+  renderGrid('gridOthers', p => p.type === 'steam' || p.type === 'apple');
+}
+document.getElementById('searchHome').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  renderGrid('gridHome', p => p.type==='prepaid' && (p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)));
+});
+document.getElementById('searchOthers').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  renderGrid('gridOthers', p => (p.type==='steam'||p.type==='apple') && (p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)));
+});
+
+/* ============== payment flow ============== */
+function goToPayment(productName){
+  document.getElementById('productField').value = productName;
+  document.getElementById('emailField').value = '';
+  document.getElementById('amountField').value = '';
+  document.getElementById('infoField').value = '';
+  document.getElementById('methodField').value = 'Transcash';
+  document.getElementById('cryptoBlock').style.display = 'none';
+  showPage('pay');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+document.getElementById('methodField').addEventListener('change', ()=>{
+  const val = document.getElementById('methodField').value;
+  const show = val === 'Crypto';
+  document.getElementById('cryptoBlock').style.display = show ? 'block' : 'none';
+  if(show) updateCryptoUI();
+});
+
+document.getElementById('cryptoSelect').addEventListener('change', updateCryptoUI);
+function updateCryptoUI(){
+  const coin = document.getElementById('cryptoSelect').value;
+  const addr = cryptoAddresses[coin];
+  document.getElementById('addressText').textContent = addr;
+  document.getElementById('addressBox').style.display = 'flex';
+  document.getElementById('cryptoWarning').style.display = 'block';
+  document.getElementById('cryptoWarning').textContent = cryptoNotes[coin] || '';
+}
+
+/* copy address */
+document.getElementById('copyAddressBtn').addEventListener('click', ()=>{
+  const text = document.getElementById('addressText').textContent;
+  navigator.clipboard?.writeText(text).then(()=> {
+    alert('Adresse copiée dans le presse-papier ✅');
+  }).catch(()=> {
+    prompt('Copiez l’adresse (CTRL+C):', text);
+  });
+});
+
+/* send proof email (mailto) */
+document.getElementById('sendProofBtn').addEventListener('click', ()=>{
+  const to = 'prestatot@outlook.fr';
+  const product = document.getElementById('productField').value || '[produit]';
+  const method = document.getElementById('methodField').value || '[mode]';
+  const crypto = document.getElementById('cryptoSelect').value || '';
+  const email = document.getElementById('emailField').value || '[email client]';
+  const amount = document.getElementById('amountField').value || '[montant]';
+  const info = document.getElementById('infoField').value || '[informations]';
+
+  let body = `Bonjour Rincard Prestitot,%0A%0AJ'ai effectué le paiement. Voici les informations :%0A%0A` +
+             `• Produit commandé : ${product}%0A` +
+             `• Montant payé : ${amount}%0A` +
+             `• Mode de paiement : ${method}` + (method==='Crypto' ? ` - ${crypto}%0A• Adresse envoyée : ${cryptoAddresses[crypto]}` : `%0A`) +
+             `• Email pour recevoir la carte : ${email}%0A` +
+             `• Informations supplémentaires : ${info}%0A%0A` +
+             `Veuillez trouver la preuve de paiement en pièce jointe.%0A%0AMerci,%0A[Nom du client]`;
+
+  const subject = `Paiement - ${product} - ${method}${method==='Crypto' ? ' ' + crypto : ''}`;
+  window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${body}`;
+});
+
+/* init */
+renderAll();
+(function(){ const hash = (location.hash || '#home').replace('#',''); showPage(hash); })();
+</script>
+
+</body>
+</html>
